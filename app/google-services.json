@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "972094848856",
+    "project_id": "catalogoapp-1223c",
+    "storage_bucket": "catalogoapp-1223c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972094848856:android:5b36ba1ac53f662d866f2d",
+        "android_client_info": {
+          "package_name": "com.catalogoapp.consultoras"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6KiWi1LGORj4_hN12nsmS2znac08TAa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
