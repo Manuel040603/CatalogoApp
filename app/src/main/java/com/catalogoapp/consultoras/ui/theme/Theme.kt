@@ -30,7 +30,7 @@ private val LightColors = lightColorScheme(
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    outline = Color(0xFF847377)
+    outline = Color(0xFFC1A5A9)
 )
 
 private val DarkColors = darkColorScheme(

@@ -17,27 +17,21 @@ import com.catalogoapp.consultoras.ui.screens.capacitacion.CapacitacionListScree
 import com.catalogoapp.consultoras.ui.screens.capacitacion.NuevaCapacitacionScreen
 import com.catalogoapp.consultoras.ui.screens.catalogo.CatalogoScreen
 import com.catalogoapp.consultoras.ui.screens.devolucion.DevolucionScreen
+import com.catalogoapp.consultoras.ui.screens.home.HomeScreen
+import com.catalogoapp.consultoras.ui.screens.main.MainScreen
 import com.catalogoapp.consultoras.ui.screens.pedido.NuevoPedidoScreen
 import com.catalogoapp.consultoras.ui.screens.pedido.PedidoListScreen
 import com.catalogoapp.consultoras.ui.screens.profile.ProfileScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.CrearRepartoScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.ListaRepartosScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.RepartoDetalleScreen
-import com.catalogoapp.consultoras.viewmodel.AdminConsultorasViewModel
-import com.catalogoapp.consultoras.viewmodel.AuthViewModel
-import com.catalogoapp.consultoras.viewmodel.CapacitacionDetalleViewModel
-import com.catalogoapp.consultoras.viewmodel.CapacitacionViewModel
-import com.catalogoapp.consultoras.viewmodel.CatalogoViewModel
-import com.catalogoapp.consultoras.viewmodel.DevolucionViewModel
-import com.catalogoapp.consultoras.viewmodel.NuevaCapacitacionViewModel
-import com.catalogoapp.consultoras.viewmodel.PedidoViewModel
-import com.catalogoapp.consultoras.viewmodel.ProfileViewModel
-import com.catalogoapp.consultoras.viewmodel.RepartoViewModel
+import com.catalogoapp.consultoras.viewmodel.*
 
 object Rutas {
     const val LOGIN = "login"
     const val REGISTRO = "registro"
     const val RECUPERAR = "recuperar"
+    const val HOME = "home"
     const val PERFIL = "perfil"
     const val CATALOGO = "catalogo"
     const val DEVOLUCION = "devolucion"
@@ -59,7 +53,7 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
     val pedidoViewModel = remember { PedidoViewModel() }
     val repartoViewModel = remember { RepartoViewModel() }
 
-    val destinoInicial = if (authViewModel.usuarioActual != null) Rutas.PERFIL else Rutas.LOGIN
+    val destinoInicial = if (authViewModel.usuarioActual != null) Rutas.HOME else Rutas.LOGIN
 
     NavHost(navController = navController, startDestination = destinoInicial) {
 
@@ -67,7 +61,7 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
             LoginScreen(
                 viewModel = authViewModel,
                 onLoginExitoso = {
-                    navController.navigate(Rutas.PERFIL) {
+                    navController.navigate(Rutas.HOME) {
                         popUpTo(Rutas.LOGIN) { inclusive = true }
                     }
                 },
@@ -91,33 +85,48 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
             )
         }
 
-        composable(Rutas.PERFIL) {
-            val usuario = authViewModel.usuarioActual
-            if (usuario != null) {
-                ProfileScreen(
-                    usuario = usuario,
-                    viewModel = profileViewModel,
-                    onCerrarSesion = {
-                        authViewModel.cerrarSesion()
-                        navController.navigate(Rutas.LOGIN) {
-                            popUpTo(0)
-                        }
-                    },
-                    onVerCatalogo = { navController.navigate(Rutas.CATALOGO) },
-                    onIrACapacitaciones = { navController.navigate(Rutas.CAPACITACIONES) },
-                    onIrAAdminConsultoras = { navController.navigate(Rutas.ADMIN_CONSULTORAS) },
-                    onIrAPedidos = { navController.navigate(Rutas.PEDIDOS) },
-                    onIrAReparto = { navController.navigate(Rutas.LISTA_REPARTOS) }
+        composable(Rutas.HOME) {
+            MainScreen(navController = navController) {
+                HomeScreen(
+                    onNavegarACatalogo = { navController.navigate(Rutas.CATALOGO) },
+                    onNavegarAPedidos = { navController.navigate(Rutas.PEDIDOS) },
+                    onNavegarACapacitacion = { navController.navigate(Rutas.CAPACITACIONES) },
+                    onNavegarAPerfil = { navController.navigate(Rutas.PERFIL) }
                 )
             }
         }
 
+        composable(Rutas.PERFIL) {
+            val usuario = authViewModel.usuarioActual
+            if (usuario != null) {
+                MainScreen(navController = navController) {
+                    ProfileScreen(
+                        usuario = usuario,
+                        viewModel = profileViewModel,
+                        onCerrarSesion = {
+                            authViewModel.cerrarSesion()
+                            navController.navigate(Rutas.LOGIN) {
+                                popUpTo(0)
+                            }
+                        },
+                        onVerCatalogo = { navController.navigate(Rutas.CATALOGO) },
+                        onIrACapacitaciones = { navController.navigate(Rutas.CAPACITACIONES) },
+                        onIrAAdminConsultoras = { navController.navigate(Rutas.ADMIN_CONSULTORAS) },
+                        onIrAPedidos = { navController.navigate(Rutas.PEDIDOS) },
+                        onIrAReparto = { navController.navigate(Rutas.LISTA_REPARTOS) }
+                    )
+                }
+            }
+        }
+
         composable(Rutas.PEDIDOS) {
-            PedidoListScreen(
-                viewModel = pedidoViewModel,
-                onVolver = { navController.popBackStack() },
-                onNuevoPedido = { navController.navigate(Rutas.NUEVO_PEDIDO) }
-            )
+            MainScreen(navController = navController) {
+                PedidoListScreen(
+                    viewModel = pedidoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onNuevoPedido = { navController.navigate(Rutas.NUEVO_PEDIDO) }
+                )
+            }
         }
 
         composable(Rutas.NUEVO_PEDIDO) {
@@ -163,11 +172,13 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
 
         composable(Rutas.CATALOGO) {
             val catalogoViewModel = remember { CatalogoViewModel() }
-            CatalogoScreen(
-                viewModel = catalogoViewModel,
-                onVolver = { navController.popBackStack() },
-                onRegistrarDevolucion = { navController.navigate(Rutas.DEVOLUCION) }
-            )
+            MainScreen(navController = navController) {
+                CatalogoScreen(
+                    viewModel = catalogoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onRegistrarDevolucion = { navController.navigate(Rutas.DEVOLUCION) }
+                )
+            }
         }
 
         composable(Rutas.DEVOLUCION) {
@@ -180,12 +191,14 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
 
         composable(Rutas.CAPACITACIONES) {
             val capacitacionViewModel = remember { CapacitacionViewModel() }
-            CapacitacionListScreen(
-                viewModel = capacitacionViewModel,
-                onVolver = { navController.popBackStack() },
-                onAbrirCapacitacion = { id -> navController.navigate("${Rutas.CAPACITACION_DETALLE}/$id") },
-                onNuevaCapacitacion = { navController.navigate(Rutas.NUEVA_CAPACITACION) }
-            )
+            MainScreen(navController = navController) {
+                CapacitacionListScreen(
+                    viewModel = capacitacionViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onAbrirCapacitacion = { id -> navController.navigate("${Rutas.CAPACITACION_DETALLE}/$id") },
+                    onNuevaCapacitacion = { navController.navigate(Rutas.NUEVA_CAPACITACION) }
+                )
+            }
         }
 
         composable(Rutas.NUEVA_CAPACITACION) {

@@ -13,27 +13,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.catalogoapp.consultoras.viewmodel.AuthUiState
 import com.catalogoapp.consultoras.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     viewModel: AuthViewModel,
-    onLoginExitoso: () -> Unit,
-    onIrARegistro: () -> Unit,
-    onIrARecuperar: () -> Unit
+    onRegistroExitoso: () -> Unit,
+    onIrALogin: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmarPassword by remember { mutableStateOf("") }
     val estado by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(estado) {
-        if (estado is AuthUiState.Exito) {
-            onLoginExitoso()
-            viewModel.resetEstado()
-        }
-    }
+    val contrasenasNoCoinciden = password.isNotEmpty() && password != confirmarPassword
 
     Box(
         modifier = Modifier
@@ -56,7 +50,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "CatalogoApp",
+                text = "Únete a Nosotras",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
@@ -64,14 +58,14 @@ fun LoginScreen(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "Bienvenida, Consultora",
+                text = "Crea tu cuenta de consultora",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -96,35 +90,44 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Contraseña") },
+                        label = { Text("Contraseña (mín. 6 caracteres)") },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = confirmarPassword,
+                        onValueChange = { confirmarPassword = it },
+                        label = { Text("Confirmar contraseña") },
+                        singleLine = true,
+                        isError = contrasenasNoCoinciden,
+                        visualTransformation = PasswordVisualTransformation(),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                    TextButton(
-                        onClick = onIrARecuperar,
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
+                    if (contrasenasNoCoinciden) {
                         Text(
-                            "¿Olvidaste tu contraseña?",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary
+                            "Las contraseñas no coinciden",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.align(Alignment.Start).padding(start = 4.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = { viewModel.iniciarSesion(email.trim(), password) },
-                        enabled = estado !is AuthUiState.Cargando,
+                        onClick = { viewModel.registrar(email.trim(), password) },
+                        enabled = estado !is AuthUiState.Cargando &&
+                                email.isNotBlank() && password.length >= 6 && !contrasenasNoCoinciden,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = RoundedCornerShape(28.dp) // Estilo cápsula
+                        shape = RoundedCornerShape(28.dp)
                     ) {
                         if (estado is AuthUiState.Cargando) {
                             CircularProgressIndicator(
@@ -134,7 +137,7 @@ fun LoginScreen(
                             )
                         } else {
                             Text(
-                                "Iniciar Sesión",
+                                "Crear mi Cuenta",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -148,10 +151,10 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("¿No tienes cuenta?", style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = onIrARegistro) {
+                Text("¿Ya tienes cuenta?", style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = onIrALogin) {
                     Text(
-                        "Regístrate",
+                        "Inicia sesión",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -160,14 +163,30 @@ fun LoginScreen(
                 }
             }
 
-            if (estado is AuthUiState.Error) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = (estado as AuthUiState.Error).mensaje,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
-                )
+            when (val actual = estado) {
+                is AuthUiState.Exito -> {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        actual.mensaje,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    LaunchedEffect(Unit) {
+                        onRegistroExitoso()
+                        viewModel.resetEstado()
+                    }
+                }
+                is AuthUiState.Error -> {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        actual.mensaje,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {}
             }
         }
     }
