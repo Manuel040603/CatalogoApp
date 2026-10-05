@@ -12,25 +12,25 @@ private val LightColors = lightColorScheme(
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFFFD9E4),
     onPrimaryContainer = Color(0xFF3A001A),
-    secondary = Color(0xFF880E4F),
+    secondary = Color(0xFF1A237E),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFFBD4E4),
-    onSecondaryContainer = Color(0xFF330018),
+    secondaryContainer = Color(0xFFC5CAE9),
+    onSecondaryContainer = Color(0xFF1A237E),
     tertiary = Color(0xFF6D4C41),
     onTertiary = Color(0xFFFFFFFF),
     tertiaryContainer = Color(0xFFEFDDD7),
     onTertiaryContainer = Color(0xFF2B1510),
-    background = Color(0xFFFFF8FA),
-    onBackground = Color(0xFF201A1B),
-    surface = Color(0xFFFFF8FA),
-    onSurface = Color(0xFF201A1B),
-    surfaceVariant = Color(0xFFF2DDE2),
-    onSurfaceVariant = Color(0xFF514347),
+    background = Color(0xFFF5F5F5),
+    onBackground = Color(0xFF1A237E),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1A237E),
+    surfaceVariant = Color(0xFFE0E0E0),
+    onSurfaceVariant = Color(0xFF424242),
     error = Color(0xFFBA1A1A),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    outline = Color(0xFFC1A5A9)
+    outline = Color(0xFFBDBDBD)
 )
 
 private val DarkColors = darkColorScheme(
@@ -65,6 +65,21 @@ fun CatalogoAppTheme(
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) DarkColors else LightColors
+
+    val view = androidx.compose.ui.platform.LocalView.current
+    if (!view.isInEditMode) {
+        androidx.compose.runtime.SideEffect {
+            val window = (view.context as android.app.Activity).window
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+            val controller = androidx.core.view.WindowCompat.getInsetsController(window, view)
+            // Si es tema claro, iconos oscuros. Si es tema oscuro, iconos claros.
+            controller.isAppearanceLightStatusBars = !darkTheme
+            controller.isAppearanceLightNavigationBars = !darkTheme
+        }
+    }
+
     MaterialTheme(
         colorScheme = colors,
         content = content

@@ -175,8 +175,7 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
             MainScreen(navController = navController) {
                 CatalogoScreen(
                     viewModel = catalogoViewModel,
-                    onVolver = { navController.popBackStack() },
-                    onRegistrarDevolucion = { navController.navigate(Rutas.DEVOLUCION) }
+                    onVolver = { navController.popBackStack() }
                 )
             }
         }
