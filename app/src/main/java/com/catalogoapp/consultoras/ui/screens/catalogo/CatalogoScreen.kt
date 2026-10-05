@@ -139,9 +139,9 @@ fun RetailProductCard(producto: Producto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Detalle del producto */ }
+            .clickable { }
     ) {
-        // Imagen del Producto (Sin tarjeta, fondo limpio)
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -160,7 +160,6 @@ fun RetailProductCard(producto: Producto) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Información Minimalista
         Text(
             text = producto.nombre,
             style = MaterialTheme.typography.titleSmall,

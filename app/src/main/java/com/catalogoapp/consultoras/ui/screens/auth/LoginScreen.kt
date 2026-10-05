@@ -124,7 +124,7 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = RoundedCornerShape(28.dp) // Estilo cápsula
+                        shape = RoundedCornerShape(28.dp)
                     ) {
                         if (estado is AuthUiState.Cargando) {
                             CircularProgressIndicator(

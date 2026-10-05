@@ -74,7 +74,6 @@ fun CatalogoAppTheme(
             window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, view)
-            // Si es tema claro, iconos oscuros. Si es tema oscuro, iconos claros.
             controller.isAppearanceLightStatusBars = !darkTheme
             controller.isAppearanceLightNavigationBars = !darkTheme
         }

@@ -28,20 +28,12 @@ class MainActivity : ComponentActivity() {
                 SideEffect {
                     val window = (view.context as Activity).window
 
-                    // 1. FONDO DE LA BARRA DE ESTADO (ARRIBA)
-                    // Usamos un blanco puro o gris muy claro para que sea minimalista
                     window.statusBarColor = android.graphics.Color.WHITE
 
-                    // 2. ICONOS DE LA BARRA DE ESTADO (HORA, BATERIA, etc.)
-                    // isAppearanceLightStatusBars = true hace que los iconos sean OSCUROS/NEGROS
-                    // Esto es vital para que se vean sobre el fondo blanco
                     WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
 
-                    // 3. BARRA DE NAVEGACIÓN (ABAJO)
-                    // La mantenemos en gris oscuro/negro como querías
                     window.navigationBarColor = android.graphics.Color.parseColor("#121212")
 
-                    // Iconos de la barra inferior en BLANCO para contrastar con el fondo oscuro
                     WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
                 }
             }
