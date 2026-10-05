@@ -1,9 +1,25 @@
-*.iml
-.gradle
-local.properties
-.idea
-.DS_Store
+# Claude Code
+.claude/
+
+# Android / Gradle
+.gradle/
 build/
 captures/
-.externalNativeBuild
-.cxx
+*.iml
+local.properties
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iws
+*.ipr
+out/
+
+# Kotlin
+.kotlin/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
