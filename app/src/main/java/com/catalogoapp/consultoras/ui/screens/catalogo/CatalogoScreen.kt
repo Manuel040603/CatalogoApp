@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.catalogoapp.consultoras.data.model.Producto
 import com.catalogoapp.consultoras.viewmodel.CatalogoViewModel
 
@@ -38,7 +40,6 @@ fun CatalogoScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp)
     ) {
-        // Header Minimalista
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -63,7 +64,6 @@ fun CatalogoScreen(
             }
         }
 
-        // BUSCADOR ESTILO RETAIL PRO
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -87,7 +87,6 @@ fun CatalogoScreen(
             return@Column
         }
 
-        // Filtros de Categoría (Compactos)
         val categorias = viewModel.categoriasDisponibles()
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -109,7 +108,6 @@ fun CatalogoScreen(
             }
         }
 
-        // GRID DE PRODUCTOS (ENFOQUE TOTAL EN EL PRODUCTO)
         val filteredProducts = estado.productos.filter {
             it.nombre.contains(searchQuery, ignoreCase = true) ||
             it.categoria.contains(searchQuery, ignoreCase = true)
@@ -150,12 +148,21 @@ fun RetailProductCard(producto: Producto) {
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.ShoppingCart,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.outline
-            )
+            if (producto.imagenUrl.isNotBlank()) {
+                AsyncImage(
+                    model = producto.imagenUrl,
+                    contentDescription = producto.nombre,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.outline
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
