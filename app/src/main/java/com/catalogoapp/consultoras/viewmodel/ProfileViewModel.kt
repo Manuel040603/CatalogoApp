@@ -53,7 +53,7 @@ class ProfileViewModel(
         email: String,
         nombre: String,
         preferencias: String,
-        tienePhoto: Boolean
+        fotoBase64: String
     ) {
         _uiState.value = ProfileUiState.Guardando
         viewModelScope.launch {
@@ -62,7 +62,7 @@ class ProfileViewModel(
                 nombre = nombre,
                 email = email,
                 preferencias = preferencias,
-                tienePhotoLocal = tienePhoto
+                fotoBase64 = fotoBase64
             )
             val resultado = repository.guardarPerfil(perfil)
 

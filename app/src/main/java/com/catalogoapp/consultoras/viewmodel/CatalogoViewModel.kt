@@ -24,6 +24,7 @@ class CatalogoViewModel @JvmOverloads constructor(
     val uiState: StateFlow<CatalogoUiState> = _uiState
 
     private var todosLosProductos: List<Producto> = emptyList()
+    private var siembraIntentada = false
 
     init {
         viewModelScope.launch {
@@ -34,6 +35,11 @@ class CatalogoViewModel @JvmOverloads constructor(
                 .collect { productos ->
                     todosLosProductos = productos
                     aplicarFiltro()
+
+                    if (productos.isEmpty() && !siembraIntentada) {
+                        siembraIntentada = true
+                        cargarProductosDeEjemplo()
+                    }
                 }
         }
     }

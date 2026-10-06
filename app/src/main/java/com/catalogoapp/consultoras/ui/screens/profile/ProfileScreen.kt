@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.catalogoapp.consultoras.util.bitmapABase64
+import com.catalogoapp.consultoras.util.base64ABitmap
 import com.catalogoapp.consultoras.viewmodel.ProfileUiState
 import com.catalogoapp.consultoras.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseUser
@@ -41,12 +43,13 @@ fun ProfileScreen(
     onIrACapacitaciones: () -> Unit = {},
     onIrAAdminConsultoras: () -> Unit = {},
     onIrAPedidos: () -> Unit = {},
-    onIrAReparto: () -> Unit = {}
+    onIrAReparto: () -> Unit = {},
+    onIrAAgregarProducto: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var nombre by remember { mutableStateOf("") }
     var preferencias by remember { mutableStateOf("") }
-    var foto by remember { mutableStateOf<Bitmap?>(null) }
+    var fotoNueva by remember { mutableStateOf<Bitmap?>(null) }
     val estado by viewModel.uiState.collectAsState()
     val perfilCargado by viewModel.perfil.collectAsState()
 
@@ -76,9 +79,13 @@ fun ProfileScreen(
         }
     }
 
+    val fotoGuardada = remember(perfilCargado) {
+        perfilCargado?.fotoBase64?.takeIf { it.isNotBlank() }?.let { base64ABitmap(it) }
+    }
+
     val lanzadorCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap -> foto = bitmap }
+    ) { bitmap -> fotoNueva = bitmap }
 
     val lanzadorPermisoCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -132,9 +139,10 @@ fun ProfileScreen(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (foto != null) {
+                    val fotoAMostrar = fotoNueva ?: fotoGuardada
+                    if (fotoAMostrar != null) {
                         Image(
-                            bitmap = foto!!.asImageBitmap(),
+                            bitmap = fotoAMostrar.asImageBitmap(),
                             contentDescription = "Foto de perfil",
                             modifier = Modifier.fillMaxSize().clip(CircleShape)
                         )
@@ -234,13 +242,14 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = {
+                            val fotoParaGuardar = fotoNueva?.let { bitmapABase64(it) } ?: perfilCargado?.fotoBase64 ?: ""
                             viewModel.guardarPerfil(
                                 context = context,
                                 uid = usuario.uid,
                                 email = usuario.email ?: "",
                                 nombre = nombre,
                                 preferencias = preferencias,
-                                tienePhoto = foto != null
+                                fotoBase64 = fotoParaGuardar
                             )
                         },
                         enabled = estado !is ProfileUiState.Guardando && nombre.isNotBlank(),
@@ -268,6 +277,7 @@ fun ProfileScreen(
             ProfileActionItem("Mis Pedidos", Icons.Default.List, onIrAPedidos)
             ProfileActionItem("Reparto", Icons.Default.LocalShipping, onIrAReparto)
             ProfileActionItem("Capacitaciones", Icons.Default.School, onIrACapacitaciones)
+            ProfileActionItem("Agregar Producto", Icons.Default.AddShoppingCart, onIrAAgregarProducto)
             ProfileActionItem("Admin Panel", Icons.Default.Settings, onIrAAdminConsultoras)
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -310,7 +320,7 @@ fun StatCard(modifier: Modifier = Modifier, label: String, value: String, icon: 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-            Spacer(//Corte accidental corregido
+            Spacer(
                 modifier = Modifier.height(4.dp)
             )
             Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)

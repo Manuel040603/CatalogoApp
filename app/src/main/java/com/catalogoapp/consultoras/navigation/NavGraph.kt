@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.catalogoapp.consultoras.ui.screens.admin.AdminConsultorasScreen
+import com.catalogoapp.consultoras.ui.screens.admin.AgregarProductoScreen
 import com.catalogoapp.consultoras.ui.screens.auth.ForgotPasswordScreen
 import com.catalogoapp.consultoras.ui.screens.auth.LoginScreen
 import com.catalogoapp.consultoras.ui.screens.auth.RegisterScreen
@@ -39,6 +40,7 @@ object Rutas {
     const val NUEVA_CAPACITACION = "nueva_capacitacion"
     const val CAPACITACION_DETALLE = "capacitacion_detalle"
     const val ADMIN_CONSULTORAS = "admin_consultoras"
+    const val AGREGAR_PRODUCTO = "agregar_producto"
     const val PEDIDOS = "pedidos"
     const val NUEVO_PEDIDO = "nuevo_pedido"
     const val LISTA_REPARTOS = "lista_repartos"
@@ -113,10 +115,19 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
                         onIrACapacitaciones = { navController.navigate(Rutas.CAPACITACIONES) },
                         onIrAAdminConsultoras = { navController.navigate(Rutas.ADMIN_CONSULTORAS) },
                         onIrAPedidos = { navController.navigate(Rutas.PEDIDOS) },
-                        onIrAReparto = { navController.navigate(Rutas.LISTA_REPARTOS) }
+                        onIrAReparto = { navController.navigate(Rutas.LISTA_REPARTOS) },
+                        onIrAAgregarProducto = { navController.navigate(Rutas.AGREGAR_PRODUCTO) }
                     )
                 }
             }
+        }
+
+        composable(Rutas.AGREGAR_PRODUCTO) {
+            val agregarProductoViewModel = remember { AgregarProductoViewModel() }
+            AgregarProductoScreen(
+                viewModel = agregarProductoViewModel,
+                onVolver = { navController.popBackStack() }
+            )
         }
 
         composable(Rutas.PEDIDOS) {
