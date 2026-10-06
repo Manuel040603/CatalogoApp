@@ -125,6 +125,9 @@ class PedidoViewModel @JvmOverloads constructor(
             val resultado = repository.crearPedido(datos)
             _uiState.value = resultado.fold(
                 onSuccess = {
+                    estado.carrito.forEach { item ->
+                        productRepository.descontarStockPorVenta(item.producto.id, item.cantidad)
+                    }
                     PedidoUiState(
                         cargandoLista = false,
                         pedidos = listOf(it) + _uiState.value.pedidos,

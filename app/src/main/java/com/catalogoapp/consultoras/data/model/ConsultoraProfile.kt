@@ -7,5 +7,6 @@ data class ConsultoraProfile @JvmOverloads constructor(
     val preferencias: String = "",
     val fotoBase64: String = "",
     val activo: Boolean = true,
+    val esAdmin: Boolean = false,
     val ultimaActualizacion: Long = System.currentTimeMillis()
 )

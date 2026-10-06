@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.catalogoapp.consultoras.util.AdminConfig
 import com.catalogoapp.consultoras.util.bitmapABase64
 import com.catalogoapp.consultoras.util.base64ABitmap
 import com.catalogoapp.consultoras.viewmodel.ProfileUiState
@@ -44,7 +45,8 @@ fun ProfileScreen(
     onIrAAdminConsultoras: () -> Unit = {},
     onIrAPedidos: () -> Unit = {},
     onIrAReparto: () -> Unit = {},
-    onIrAAgregarProducto: () -> Unit = {}
+    onIrAAgregarProducto: () -> Unit = {},
+    onIrADevolucion: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var nombre by remember { mutableStateOf("") }
@@ -54,10 +56,16 @@ fun ProfileScreen(
     val perfilCargado by viewModel.perfil.collectAsState()
 
     LaunchedEffect(usuario.uid) {
+        nombre = ""
+        preferencias = ""
+        fotoNueva = null
         viewModel.cargarPerfil(usuario.uid)
+        viewModel.cargarEstadisticas()
         viewModel.registrarTokenFcm()
         viewModel.programarRecordatorioPedidos(context)
     }
+
+    val estadisticas by viewModel.estadisticas.collectAsState()
 
     val lanzadorPermisoNotificaciones = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -82,6 +90,8 @@ fun ProfileScreen(
     val fotoGuardada = remember(perfilCargado) {
         perfilCargado?.fotoBase64?.takeIf { it.isNotBlank() }?.let { base64ABitmap(it) }
     }
+
+    val esAdmin = remember(usuario.email) { AdminConfig.esAdmin(usuario.email) }
 
     val lanzadorCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
@@ -176,7 +186,11 @@ fun ProfileScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    "Nivel Oro ⭐",
+                    when {
+                       esAdmin -> "Administrador ⭐"
+                       perfilCargado?.activo == false -> "Inactiva"
+                       else -> "Consultora activa"
+                   },
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.primary
@@ -192,19 +206,19 @@ fun ProfileScreen(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     label = "Ventas",
-                    value = "S/ 1,250",
+                    value = if (estadisticas.cargando) "..." else "S/ ${"%.2f".format(estadisticas.ventasTotales)}",
                     icon = Icons.Default.AttachMoney
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     label = "Pedidos",
-                    value = "42",
+                    value = if (estadisticas.cargando) "..." else "${estadisticas.totalPedidos}",
                     icon = Icons.Default.List
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Rango",
-                    value = "Top 10",
+                    label = "Entregados",
+                    value = if (estadisticas.cargando) "..." else "${estadisticas.pedidosEntregados}",
                     icon = Icons.Default.Star
                 )
             }
@@ -277,8 +291,12 @@ fun ProfileScreen(
             ProfileActionItem("Mis Pedidos", Icons.Default.List, onIrAPedidos)
             ProfileActionItem("Reparto", Icons.Default.LocalShipping, onIrAReparto)
             ProfileActionItem("Capacitaciones", Icons.Default.School, onIrACapacitaciones)
-            ProfileActionItem("Agregar Producto", Icons.Default.AddShoppingCart, onIrAAgregarProducto)
-            ProfileActionItem("Admin Panel", Icons.Default.Settings, onIrAAdminConsultoras)
+            ProfileActionItem("Registrar Devolución", Icons.Default.AssignmentReturn, onIrADevolucion)
+
+            if (esAdmin) {
+                ProfileActionItem("Agregar Producto", Icons.Default.AddShoppingCart, onIrAAgregarProducto)
+                ProfileActionItem("Admin Panel", Icons.Default.Settings, onIrAAdminConsultoras)
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 

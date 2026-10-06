@@ -1,7 +1,11 @@
 package com.catalogoapp.consultoras.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -26,6 +30,7 @@ import com.catalogoapp.consultoras.ui.screens.profile.ProfileScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.CrearRepartoScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.ListaRepartosScreen
 import com.catalogoapp.consultoras.ui.screens.reparto.RepartoDetalleScreen
+import com.catalogoapp.consultoras.util.AdminConfig
 import com.catalogoapp.consultoras.viewmodel.*
 
 object Rutas {
@@ -49,47 +54,64 @@ object Rutas {
 }
 
 @Composable
+private fun PantallaConEspacioSuperior(contenido: @Composable () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        contenido()
+    }
+}
+
+@Composable
 fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
     val navController: NavHostController = rememberNavController()
     val profileViewModel = remember { ProfileViewModel() }
     val pedidoViewModel = remember { PedidoViewModel() }
     val repartoViewModel = remember { RepartoViewModel() }
+    val homeViewModel = remember { HomeViewModel() }
 
     val destinoInicial = if (authViewModel.usuarioActual != null) Rutas.HOME else Rutas.LOGIN
 
     NavHost(navController = navController, startDestination = destinoInicial) {
 
         composable(Rutas.LOGIN) {
-            LoginScreen(
-                viewModel = authViewModel,
-                onLoginExitoso = {
-                    navController.navigate(Rutas.HOME) {
-                        popUpTo(Rutas.LOGIN) { inclusive = true }
-                    }
-                },
-                onIrARegistro = { navController.navigate(Rutas.REGISTRO) },
-                onIrARecuperar = { navController.navigate(Rutas.RECUPERAR) }
-            )
+            PantallaConEspacioSuperior {
+                LoginScreen(
+                    viewModel = authViewModel,
+                    onLoginExitoso = {
+                        navController.navigate(Rutas.HOME) {
+                            popUpTo(Rutas.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onIrARegistro = { navController.navigate(Rutas.REGISTRO) },
+                    onIrARecuperar = { navController.navigate(Rutas.RECUPERAR) }
+                )
+            }
         }
 
         composable(Rutas.REGISTRO) {
-            RegisterScreen(
-                viewModel = authViewModel,
-                onRegistroExitoso = { navController.popBackStack() },
-                onIrALogin = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                RegisterScreen(
+                    viewModel = authViewModel,
+                    onRegistroExitoso = { navController.popBackStack() },
+                    onIrALogin = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.RECUPERAR) {
-            ForgotPasswordScreen(
-                viewModel = authViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                ForgotPasswordScreen(
+                    viewModel = authViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.HOME) {
+            val uid = authViewModel.usuarioActual?.uid ?: ""
             MainScreen(navController = navController) {
                 HomeScreen(
+                    uid = uid,
+                    viewModel = homeViewModel,
                     onNavegarACatalogo = { navController.navigate(Rutas.CATALOGO) },
                     onNavegarAPedidos = { navController.navigate(Rutas.PEDIDOS) },
                     onNavegarACapacitacion = { navController.navigate(Rutas.CAPACITACIONES) },
@@ -116,7 +138,8 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
                         onIrAAdminConsultoras = { navController.navigate(Rutas.ADMIN_CONSULTORAS) },
                         onIrAPedidos = { navController.navigate(Rutas.PEDIDOS) },
                         onIrAReparto = { navController.navigate(Rutas.LISTA_REPARTOS) },
-                        onIrAAgregarProducto = { navController.navigate(Rutas.AGREGAR_PRODUCTO) }
+                        onIrAAgregarProducto = { navController.navigate(Rutas.AGREGAR_PRODUCTO) },
+                        onIrADevolucion = { navController.navigate(Rutas.DEVOLUCION) }
                     )
                 }
             }
@@ -124,10 +147,12 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
 
         composable(Rutas.AGREGAR_PRODUCTO) {
             val agregarProductoViewModel = remember { AgregarProductoViewModel() }
-            AgregarProductoScreen(
-                viewModel = agregarProductoViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                AgregarProductoScreen(
+                    viewModel = agregarProductoViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.PEDIDOS) {
@@ -141,32 +166,38 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
         }
 
         composable(Rutas.NUEVO_PEDIDO) {
-            NuevoPedidoScreen(
-                viewModel = pedidoViewModel,
-                onVolver = { navController.popBackStack() },
-                onPedidoCreado = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                NuevoPedidoScreen(
+                    viewModel = pedidoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onPedidoCreado = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.LISTA_REPARTOS) {
-            ListaRepartosScreen(
-                viewModel = repartoViewModel,
-                onVolver = { navController.popBackStack() },
-                onNuevoReparto = { navController.navigate(Rutas.CREAR_REPARTO) },
-                onAbrirReparto = { idReparto -> navController.navigate("${Rutas.REPARTO_DETALLE}/$idReparto") }
-            )
+            PantallaConEspacioSuperior {
+                ListaRepartosScreen(
+                    viewModel = repartoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onNuevoReparto = { navController.navigate(Rutas.CREAR_REPARTO) },
+                    onAbrirReparto = { idReparto -> navController.navigate("${Rutas.REPARTO_DETALLE}/$idReparto") }
+                )
+            }
         }
 
         composable(Rutas.CREAR_REPARTO) {
-            CrearRepartoScreen(
-                viewModel = repartoViewModel,
-                onVolver = { navController.popBackStack() },
-                onRepartoCreado = { idReparto ->
-                    navController.navigate("${Rutas.REPARTO_DETALLE}/$idReparto") {
-                        popUpTo(Rutas.CREAR_REPARTO) { inclusive = true }
+            PantallaConEspacioSuperior {
+                CrearRepartoScreen(
+                    viewModel = repartoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onRepartoCreado = { idReparto ->
+                        navController.navigate("${Rutas.REPARTO_DETALLE}/$idReparto") {
+                            popUpTo(Rutas.CREAR_REPARTO) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable(
@@ -174,11 +205,13 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("idReparto") { type = NavType.IntType })
         ) { backStackEntry ->
             val idReparto = backStackEntry.arguments?.getInt("idReparto") ?: 0
-            RepartoDetalleScreen(
-                idReparto = idReparto,
-                viewModel = repartoViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                RepartoDetalleScreen(
+                    idReparto = idReparto,
+                    viewModel = repartoViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.CATALOGO) {
@@ -193,17 +226,21 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
 
         composable(Rutas.DEVOLUCION) {
             val devolucionViewModel = remember { DevolucionViewModel() }
-            DevolucionScreen(
-                viewModel = devolucionViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                DevolucionScreen(
+                    viewModel = devolucionViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.CAPACITACIONES) {
             val capacitacionViewModel = remember { CapacitacionViewModel() }
+            val esAdmin = AdminConfig.esAdmin(authViewModel.usuarioActual?.email)
             MainScreen(navController = navController) {
                 CapacitacionListScreen(
                     viewModel = capacitacionViewModel,
+                    esAdmin = esAdmin,
                     onVolver = { navController.popBackStack() },
                     onAbrirCapacitacion = { id -> navController.navigate("${Rutas.CAPACITACION_DETALLE}/$id") },
                     onNuevaCapacitacion = { navController.navigate(Rutas.NUEVA_CAPACITACION) }
@@ -213,10 +250,12 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
 
         composable(Rutas.NUEVA_CAPACITACION) {
             val nuevaCapacitacionViewModel = remember { NuevaCapacitacionViewModel() }
-            NuevaCapacitacionScreen(
-                viewModel = nuevaCapacitacionViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                NuevaCapacitacionScreen(
+                    viewModel = nuevaCapacitacionViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -226,20 +265,24 @@ fun CatalogoAppNavHost(authViewModel: AuthViewModel) {
             val capacitacionId = backStackEntry.arguments?.getString("capacitacionId") ?: ""
             val uid = authViewModel.usuarioActual?.uid ?: ""
             val capacitacionDetalleViewModel = remember { CapacitacionDetalleViewModel() }
-            CapacitacionDetalleScreen(
-                capacitacionId = capacitacionId,
-                uid = uid,
-                viewModel = capacitacionDetalleViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                CapacitacionDetalleScreen(
+                    capacitacionId = capacitacionId,
+                    uid = uid,
+                    viewModel = capacitacionDetalleViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Rutas.ADMIN_CONSULTORAS) {
             val adminConsultorasViewModel = remember { AdminConsultorasViewModel() }
-            AdminConsultorasScreen(
-                viewModel = adminConsultorasViewModel,
-                onVolver = { navController.popBackStack() }
-            )
+            PantallaConEspacioSuperior {
+                AdminConsultorasScreen(
+                    viewModel = adminConsultorasViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

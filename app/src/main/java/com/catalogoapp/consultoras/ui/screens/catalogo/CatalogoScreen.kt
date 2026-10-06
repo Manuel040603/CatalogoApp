@@ -2,7 +2,6 @@ package com.catalogoapp.consultoras.ui.screens.catalogo
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -140,7 +139,6 @@ fun RetailProductCard(producto: Producto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
     ) {
 
         Box(

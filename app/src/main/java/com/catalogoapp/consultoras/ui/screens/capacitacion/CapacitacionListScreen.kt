@@ -16,6 +16,7 @@ import com.catalogoapp.consultoras.viewmodel.CapacitacionViewModel
 @Composable
 fun CapacitacionListScreen(
     viewModel: CapacitacionViewModel,
+    esAdmin: Boolean = false,
     onVolver: () -> Unit,
     onAbrirCapacitacion: (String) -> Unit,
     onNuevaCapacitacion: () -> Unit
@@ -33,10 +34,12 @@ fun CapacitacionListScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedButton(onClick = onNuevaCapacitacion, modifier = Modifier.fillMaxWidth()) {
-            Text("Nueva capacitacion (admin)")
+        if (esAdmin) {
+            OutlinedButton(onClick = onNuevaCapacitacion, modifier = Modifier.fillMaxWidth()) {
+                Text("Nueva capacitacion")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
-        Spacer(modifier = Modifier.height(12.dp))
 
         if (estado.cargando) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

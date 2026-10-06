@@ -95,7 +95,13 @@ private fun TarjetaPedido(
             Spacer(modifier = Modifier.height(4.dp))
             Text(pedido.telefonoCliente, style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("${pedido.items.size} productos - S/ ${"%.2f".format(pedido.total)}", style = MaterialTheme.typography.bodyMedium)
+            val totalUnidades = pedido.items.sumOf { it.cantidad }
+            val textoProductos = if (pedido.items.size == 1) {
+                "$totalUnidades unidad(es) de 1 producto"
+            } else {
+                "$totalUnidades unidad(es) de ${pedido.items.size} productos"
+            }
+            Text("$textoProductos - S/ ${"%.2f".format(pedido.total)}", style = MaterialTheme.typography.bodyMedium)
 
             if (siguienteEstado != null) {
                 Spacer(modifier = Modifier.height(10.dp))

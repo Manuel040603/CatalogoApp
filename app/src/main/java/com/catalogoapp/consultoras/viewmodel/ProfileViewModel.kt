@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import com.catalogoapp.consultoras.data.model.ConsultoraProfile
 import com.catalogoapp.consultoras.data.repository.PedidoRepository
 import com.catalogoapp.consultoras.data.repository.ProfileRepository
+import com.catalogoapp.consultoras.util.AdminConfig
 import com.catalogoapp.consultoras.worker.ProfileSyncWorker
 import com.catalogoapp.consultoras.worker.RecordatorioPedidoWorker
 import com.google.firebase.messaging.FirebaseMessaging
@@ -27,6 +28,13 @@ sealed class ProfileUiState {
     data class Error(val mensaje: String) : ProfileUiState()
 }
 
+data class ProfileStats(
+    val cargando: Boolean = true,
+    val ventasTotales: Double = 0.0,
+    val totalPedidos: Int = 0,
+    val pedidosEntregados: Int = 0
+)
+
 class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepository(),
     private val pedidoRepository: PedidoRepository = PedidoRepository()
@@ -38,12 +46,34 @@ class ProfileViewModel(
     private val _perfil = MutableStateFlow<ConsultoraProfile?>(null)
     val perfil: StateFlow<ConsultoraProfile?> = _perfil
 
+    private val _estadisticas = MutableStateFlow(ProfileStats())
+    val estadisticas: StateFlow<ProfileStats> = _estadisticas
+
     fun cargarPerfil(uid: String) {
+        _perfil.value = null
         viewModelScope.launch {
             val resultado = repository.obtenerPerfil(uid)
             resultado.onSuccess { perfilEncontrado ->
                 _perfil.value = perfilEncontrado
             }
+        }
+    }
+
+    fun cargarEstadisticas() {
+        _estadisticas.value = ProfileStats()
+        viewModelScope.launch {
+            val resultado = pedidoRepository.listarPedidos()
+            _estadisticas.value = resultado.fold(
+                onSuccess = { pedidos ->
+                    ProfileStats(
+                        cargando = false,
+                        ventasTotales = pedidos.sumOf { it.total },
+                        totalPedidos = pedidos.size,
+                        pedidosEntregados = pedidos.count { it.estado == "ENTREGADO" }
+                    )
+                },
+                onFailure = { ProfileStats(cargando = false) }
+            )
         }
     }
 
@@ -62,7 +92,8 @@ class ProfileViewModel(
                 nombre = nombre,
                 email = email,
                 preferencias = preferencias,
-                fotoBase64 = fotoBase64
+                fotoBase64 = fotoBase64,
+                esAdmin = AdminConfig.esAdmin(email)
             )
             val resultado = repository.guardarPerfil(perfil)
 

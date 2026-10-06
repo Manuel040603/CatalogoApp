@@ -1,5 +1,6 @@
 package com.catalogoapp.consultoras.ui.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,23 +10,37 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.catalogoapp.consultoras.data.model.Producto
+import com.catalogoapp.consultoras.util.base64ABitmap
+import com.catalogoapp.consultoras.viewmodel.HomeViewModel
 
 data class QuickAction(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: Color)
 
 @Composable
 fun HomeScreen(
+    uid: String,
+    viewModel: HomeViewModel,
     onNavegarACatalogo: () -> Unit,
     onNavegarAPedidos: () -> Unit,
     onNavegarACapacitacion: () -> Unit,
     onNavegarAPerfil: () -> Unit
 ) {
+    val estado by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uid) {
+        viewModel.cargar(uid)
+    }
+
     val acciones = listOf(
         QuickAction("Catálogo", Icons.Default.ShoppingCart, MaterialTheme.colorScheme.primary),
         QuickAction("Pedidos", Icons.Default.List, MaterialTheme.colorScheme.primary),
@@ -48,7 +63,7 @@ fun HomeScreen(
         ) {
             Column {
                 Text(
-                    text = "Hola, Consultora 👋",
+                    text = "Hola, ${estado.nombre.ifBlank { "Consultora" }} 👋",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -64,7 +79,8 @@ fun HomeScreen(
                 modifier = Modifier
                     .size(45.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onNavegarAPerfil() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.Person, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.primary)
@@ -86,17 +102,25 @@ fun HomeScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Tu Progreso",
+                        "Tus ventas",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     )
-                    Text(
-                        "S/ 150 para el siguiente nivel",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (estado.cargandoResumen) {
+                        Text(
+                            "Cargando...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            "S/ ${"%.2f".format(estado.ventasTotales)} en ${estado.totalPedidos} pedido(s), ${estado.pedidosEntregados} entregado(s)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
                 Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(32.dp))
             }
@@ -132,17 +156,25 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Novedades",
+            text = "Del catálogo",
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(end = 20.dp)
-        ) {
-            items(3) { index ->
-                FeaturedCard(index)
+        if (estado.productosDestacados.isEmpty()) {
+            Text(
+                "Aun no hay productos en el catalogo",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(end = 20.dp, bottom = 24.dp)
+            ) {
+                items(estado.productosDestacados) { producto ->
+                    FeaturedProductCard(producto = producto, onClick = onNavegarACatalogo)
+                }
             }
         }
     }
@@ -180,26 +212,54 @@ fun QuickActionItem(accion: QuickAction, onClick: () -> Unit) {
 }
 
 @Composable
-fun FeaturedCard(index: Int) {
+fun FeaturedProductCard(producto: Producto, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.width(240.dp).height(140.dp),
+        modifier = Modifier
+            .width(160.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Column {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                val bitmap = remember(producto.imagenUrl) {
+                    if (producto.imagenUrl.isNotBlank() && !producto.imagenUrl.startsWith("http")) {
+                        base64ABitmap(producto.imagenUrl)
+                    } else null
+                }
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = producto.nombre,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+            Column(modifier = Modifier.padding(12.dp)) {
                 Text(
-                    "Nueva Colección Invierno",
+                    producto.nombre,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    "Descubre los nuevos tonos",
+                    "S/ ${"%.2f".format(producto.precio)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
